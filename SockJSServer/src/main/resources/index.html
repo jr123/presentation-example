@@ -1,0 +1,84 @@
+<html>
+
+
+<head>
+  <title></title>
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="http://cdn.sockjs.org/sockjs-0.3.4.min.js"></script>
+  <script src="vertxbus.js"></script>
+</head>
+
+<body>
+
+<div id="status" class="box">
+  <input type="button" id="connectButton" value="Open connection"/>
+  <input type="button" id="closeButton" value="Close connection"/><br>
+  Connection Status: <b id="status_info">Not connected</b>
+</div>
+<br>
+<div id="subscribe" class="box">
+  <form onsubmit="return false;">
+    Address:<input type="text" id="subscribeAddress" value="someaddress"/>
+    <input type="button" id="subscribeButton" value="Subscribe"/>
+  </form>
+</div>
+
+<br>
+
+<div id="receive" class="box">
+  Received messages:<br>
+  <textarea rows="20" cols="50" id="received" readonly></textarea>
+</div>
+
+<script>
+
+  var eb = null;
+
+  function subscribe(address) {
+    if (eb) {
+      eb.registerHandler(address, function(msg, replyTo) {
+        $('#received').append(JSON.stringify(msg) + "\n");
+      });
+    }
+  }
+
+  function closeConn() {
+    if (eb) {
+      eb.close();
+    }
+  }
+
+  function openConn() {
+    if (!eb) {
+      eb = new vertx.EventBus("http://localhost:8081/eventbus");
+
+      eb.onopen = function() {
+        $("#status_info").text("Connected");
+      };
+
+      eb.onclose = function() {
+        $("#status_info").text("Not connected");
+        eb = null;
+      };
+    }
+  }
+
+  $(document).ready(function() {
+    
+    $("#subscribeButton").click(function() {
+      subscribe($("#subscribeAddress").val());
+    });
+
+    $("#closeButton").click(function() {
+      closeConn();
+    });
+
+    $("#connectButton").click(function() {
+      openConn();
+    });
+  });
+
+</script>
+
+</body>
+</html>
